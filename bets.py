@@ -18,9 +18,9 @@ MARKETS = 'h2h,spreads'
 ODDS_FORMAT = 'decimal'  # decimal | american
 
 DATE_FORMAT = 'iso'  # iso | unix
-NBA_URL = "https://api-nba-v1.p.rapidapi.com/seasons"
+NBA_URL = "https://api-nba-v1.p.rapidapi.com"
 
-def makeNBARequest(endpoint = "", headers={"X-RapidAPI-Key": RAPID_API_KEY, "X-RapidAPI-Host": "api-nba-v1.p.rapidapi.com"}):
+def makeNBARequest(endpoint = "", headers={"X-RapidAPI-Key": RAPID_API_KEY, "X-RapidAPI-Host": "api-nba-v1.p.rapidapi.com"}, params={}):
     '''
     Makes a request to the nba api & print the results
 
@@ -33,7 +33,8 @@ def makeNBARequest(endpoint = "", headers={"X-RapidAPI-Key": RAPID_API_KEY, "X-R
     '''
     response = requests.get(
         f'{NBA_URL}{endpoint}',
-        headers=headers
+        headers=headers,
+        params=params
     )
 
     if response.status_code != 200:
@@ -42,7 +43,6 @@ def makeNBARequest(endpoint = "", headers={"X-RapidAPI-Key": RAPID_API_KEY, "X-R
 
     else:
         responseJSON = response.json()
-        print('Results:', responseJSON)
         return responseJSON['response']
 
 
@@ -70,10 +70,20 @@ def makeOddsRequest(endpoint="", params={'api_key': ODDS_API_KEY}):
         print('Results:', responseJSON)
         return responseJSON
 
+
+def formatNBAGames(games):
+    def formatNBAGame(game):
+        return f'{game["teams"]["visitors"]["nickname"]} @ {game["teams"]["home"]["nickname"]}'
+
+    gamesList = map(formatNBAGame, games)
+    for title in (list(gamesList)):
+        print(title)        
+
 def main():
-    makeOddsRequest("/americanfootball_ncaaf/odds",
-               {'api_key': ODDS_API_KEY, 'regions': REGIONS})
-    makeNBARequest()
+    #makeOddsRequest("/americanfootball_ncaaf/odds",
+    #           {'api_key': ODDS_API_KEY, 'regions': REGIONS})
+    nbaGames = makeNBARequest("/games", params={"date": "2022-12-06"})
+    formatNBAGames(nbaGames)
 
 
 if __name__ == "__main__":
