@@ -1,90 +1,28 @@
 import os
-import requests
-
+from requester import Requester
+from printer import Printer
 from dotenv import load_dotenv
 load_dotenv()
 
 ODDS_API_KEY = os.getenv("ODDS_API_KEY")
 RAPID_API_KEY = os.getenv("RAPID_API_KEY")
 
+ODDS_URL = "https://api.the-odds-api.com/v4"
 
-SPORT = 'upcoming'  # use the sport_key from the /sports endpoint below, or use 'upcoming' to see the next 8 games across all sports
 
-REGIONS = 'au'  # uk | us | eu | au. Multiple can be specified if comma delimited
-
-# h2h | spreads | totals. Multiple can be specified if comma delimited
-MARKETS = 'h2h,spreads'
-
-ODDS_FORMAT = 'decimal'  # decimal | american
-
-DATE_FORMAT = 'iso'  # iso | unix
 NBA_URL = "https://api-nba-v1.p.rapidapi.com"
-
-def makeNBARequest(endpoint = "", headers={"X-RapidAPI-Key": RAPID_API_KEY, "X-RapidAPI-Host": "api-nba-v1.p.rapidapi.com"}, params={}):
-    '''
-    Makes a request to the nba api & print the results
-
-        Paramers:
-            endpoint (string): endpoint for api request
-            headers (object): Headers for api request
-
-        Returns:
-            responseJSON (JSON): Response of request
-    '''
-    response = requests.get(
-        f'{NBA_URL}{endpoint}',
-        headers=headers,
-        params=params
-    )
-
-    if response.status_code != 200:
-        print(
-            f'Failed to make reques: status_code {response.status_code}, response body {response.text}')
-
-    else:
-        responseJSON = response.json()
-        return responseJSON['response']
-
-
-def makeOddsRequest(endpoint="", params={'api_key': ODDS_API_KEY}):
-    '''
-    Makes a request to the odds api & print the results
-        Paramers:
-            endpoint (string): Endpoint for api request
-            params (object): Parameters for api request
-        Returns:
-            responseJSON (JSON): Response of request
-    '''
-
-    response = requests.get(
-        f'https://api.the-odds-api.com/v4/sports{endpoint}',
-        params
-    )
-
-    if response.status_code != 200:
-        print(
-            f'Failed to make reques: status_code {response.status_code}, response body {response.text}')
-
-    else:
-        responseJSON = response.json()
-        print('Results:', responseJSON)
-        return responseJSON
-
-
-def formatNBAGames(games):
-    def formatNBAGame(game):
-        return f'{game["teams"]["visitors"]["nickname"]} @ {game["teams"]["home"]["nickname"]}'
-
-    gamesList = map(formatNBAGame, games)
-    for title in (list(gamesList)):
-        print(title)        
+NBA_HEADERS = {
+	"X-RapidAPI-Key": RAPID_API_KEY,
+	"X-RapidAPI-Host": "api-nba-v1.p.rapidapi.com"
+}
 
 def main():
-    #makeOddsRequest("/americanfootball_ncaaf/odds",
-    #           {'api_key': ODDS_API_KEY, 'regions': REGIONS})
-    nbaGames = makeNBARequest("/games", params={"date": "2022-12-06"})
-    formatNBAGames(nbaGames)
-
+    nbaRequester = Requester(NBA_URL)
+    oddsRequester = Requester(ODDS_URL)
+    nbaPrinter = Printer()
+    nbaResponse = nbaRequester.makeRequest("/games", NBA_HEADERS, {"date": "2022-12-06"})
+    nbaPrinter.formatNBAGames(nbaResponse["response"])
+    #oddsRequester.makeRequest("/sports", params={"api_key": ODDS_API_KEY})
 
 if __name__ == "__main__":
     main()
