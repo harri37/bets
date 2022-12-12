@@ -30,3 +30,4 @@ class Requester():
             print(f'Failed to make request: status_code {response.status_code}, response body {response.text}')
         else:
             return response.json()      
+
